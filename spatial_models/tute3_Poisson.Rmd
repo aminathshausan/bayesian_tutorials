@@ -1,0 +1,28 @@
+---
+title: "Totorial 2: Spatial Poisson Model using CARBAyes"
+output: html_document
+date: "May 2023"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# R Markdown
+
+This example is adapted from <https://atlas.cancer.org.au/developing-a-cancer-atlas/Chapter_4.html#carbayes_2>. We start by loading the __SpatialEpi__ package and attaching the _pennLC_ data.
+
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

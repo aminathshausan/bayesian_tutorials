@@ -19,6 +19,8 @@ library(scatterplot3d)
 library(ggplot2)
 library(LaplacesDemon)
 
+
+######## c
 #### load data 
 load('dataHierLinRgress.RData')
 
@@ -51,29 +53,44 @@ plt_data
 y <- as.matrix(append( y1,  y2)) # matrix (200 by 1)
 X1 <-  cbind(rep(1, length(x1)), x1) #matrix array (100 by 2)
 X2 <- cbind(rep(1, length(x2)), x2) #matrix array(100 by 2)
-X <- rbind(X1, X2)  #matrix 200 by 2
+C <- rbind(X1, X2)  #matrix 200 by 2
 
+#X <- matrix(data=0, nrow=length(y), ncol=4)
+#X[1:100, 1] <- rep(1, length(x1))
+#X[101:200, 2] <- rep(1, length(x2))
+#X[1:100, 3] <- x1
+#X[101:200, 4] <- x2
 ## some useful values 
 
-trX_X <- t(X)%*%X  #XtX. (2by2 matrix)
-inv_trX_X = solve(trX_X)   
-mu0 = solve(trX_X, t(X)%*%y) #OLS beta (2 by 1 matrix)
+trC_C <- t(C)%*%C  #XtX. (2by2 matrix) (new = 4by4 matrix)
+inv_trC_C = solve(trC_C)    #(new = 4by4)
+mu0 = solve(trC_C, t(C)%*%y) #OLS beta (2 by 1 matrix)
+
+#trX1_X1 <- t(X1)%*%X1  #XtX. (2by2 matrix) (new = 4by4 matrix)
+#inv_trX1_X1 = solve(trX1_X1)    #(new = 4by4)
+#mu0_1 = solve(trX1_X1, t(X1)%*%y1) #OLS beta (2 by 1 matrix)
+
+#trX2_X2 <- t(X2)%*%X2  #XtX. (2by2 matrix) (new = 4by4 matrix)
+#inv_trX2_X2 = solve(trX2_X2)    #(new = 4by4)
+#mu0_2 = solve(trX2_X2, t(X2)%*%y2) #OLS beta (2 by 1 matrix)
+
 
 # define parameters for zi2
 n <- 100 #nor of observatios in each grp
 m <- 2 # nor of grps
 
+##initial guess
 a0 <- 1
 b0 <- 1
 nu0 <- 1
-sigma2_1 <- 20
-sigma2_2 <- 20
+sigma2_1 <- 20 
+sigma2_2 <- 20 
 
 
 #zi2 <- rgamma(1, shape =shape_zi2 ,   scale = scale_zi2) #1.44
 zi2 = 1.44 #initial value of xi_sqrd
 
-## parameters for sigma2 per grp
+## parameters for sigma2 per grp (initial guess)
 #zi_sqrd_init <- 0.87
 betas_1<- matrix(c(10 , 5)) 
 betas_2<- matrix(c(10 , 5))
@@ -84,10 +101,13 @@ n0 <- 2+2 # p=2 here
 nu_Sigma <- n0+m
 mu_betas1 <- as.matrix(c(1,1))
 mu_betas2 <- as.matrix(c(1,1))
-S0 <- 200*2 * inv_trX_X
-
+S0 <- 200*2 * inv_trC_C
+#S0_1 <- 200*2 * inv_trX1_X1
+#S0_2 <- 200*2 * inv_trX2_X2
 #parameters for mu_betas
 invLambda0 <- solve(S0)
+#invLambda0_1 <- solve(S0_1)
+#invLambda0_2 <- solve(S0_2)
 
 #parameters. for betas_j
 
@@ -115,7 +135,7 @@ zi2_post <- matrix(data = NA, nrow = n_iterations, ncol=1)
 #### sample posteriors 
 
 for (i in 2:n_iterations){
-#i=3
+i=1
   
   #zi2
   sum_invsigmas <- sum(1/sigma2_1 + 1/sigma2_2) 
@@ -138,7 +158,9 @@ for (i in 2:n_iterations){
   res_betas_1 <- (betas_1 - mu_betas1)%*%t((betas_1 - mu_betas1))
   res_betas_2 <- (betas_2 - mu_betas2)%*%t((betas_2 - mu_betas2))
   sum_res_betas <-  res_betas_1 + res_betas_2
-  S_Sigma <- S0 + sum_res_betas
+  S0_plus_sum_res_betas <-  S0 + sum_res_betas
+  S_Sigma <- solve(S0_plus_sum_res_betas )
+    
   Sigma <- rinvwishart(nu_Sigma, S_Sigma)
   
   #mu_betas

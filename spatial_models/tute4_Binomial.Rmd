@@ -1,0 +1,78 @@
+---
+title: "Tute4 Spatial Binomial Model"
+output: html_document
+date: "May 2023"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+This example is from the help page of S.CARleroux() model in CARBayes. It fits a spatial Binomial model on simulated data on a lattice. Let us first simulate some data.
+
+## Simulate data
+```{r}
+.libPaths("~/Documents/R/r-libraries-bayesian-tutes")
+#install.packages("MASS", lib="~/Documents/R/r-libraries-bayesian-tutes")
+
+rm(list = ls())
+set.seed(963258)
+library(MASS)
+library(CARBayes) #to fit bayesian model
+
+#### Set up a square lattice region
+x.easting <- 1:10 #integer type from 1 to 10
+x.northing <- 1:10 #integer
+#Grid below is a dataframe 100 by 2 
+Grid <- expand.grid(x.easting, x.northing) 
+K <- nrow(Grid) #100 (number of spatial units)
+
+#### set up distance and neighbourhood (W, based on sharing a common border) matrices (ie; binary specification)
+#the dis(.) function computes distances between the rows of a data matrix.
+distance <- as.matrix(dist(Grid)) # 100 by 100 matrix (array)
+W <-array(0, c(K,K)) #100 by 100 matrix
+W[distance==1] <-1 	#puts a 1 in W whereever distance =1
+
+#### Generate the covariates and response data
+x1 <- rnorm(K) #100 values from normal (0,1)
+x2 <- rnorm(K) #100 values
+theta <- rnorm(K, sd=0.05) #100 values from normal(0,0.05)
+#phi is 100 values from multivariate normal with covariance structure
+phi <- mvrnorm(n=1, mu=rep(0,K), Sigma=0.4 * exp(-0.1 * distance)) 
+
+#this logit is the form of BYM model with both spatial and indep. random effects
+logit <- x1 + x2 + theta + phi #named vector of length 100
+prob <- exp(logit) / (1 + exp(logit)) #named vector of length 100
+trials <- rep(50,K) #length 100, each value =50
+
+#simulate 
+Y <- rbinom(n=K, size=trials, prob=prob) #integer vector of length 100
+#min(Y) =1
+#max(Y) = 49
+```
+
+## Fit the Leroux model
+
+You can also embed plots, for example:
+
+```{r, echo=TRUE}
+#write the formula for the covariate part of the model using syntax of 
+#lm() function 
+formula <- Y ~ x1 + x2
+
+#check the model first with few samples
+model <- S.CARleroux(formula=formula, family="binomial", 
+                     trials=trials, W=W, burnin=10, n.sample=50)
+```
+## Print summary and check model
+
+Here four parameters are estimated
+```{r}
+# get summary of parameters as a table
+model$summary.results
+```
+
+
+ 
